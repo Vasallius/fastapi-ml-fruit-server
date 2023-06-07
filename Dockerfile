@@ -11,9 +11,15 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Install the necessary dependencies for libGL.so.1 and OpenCV
-RUN apt-get update && \
-    apt-get install -y libgl1-mesa-glx libgl1-mesa-dri xvfb libglu1-mesa-glx pkg-config libglu1-mesa-dri
-
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends \
+    libgl1-mesa-glx \
+    libgl1-mesa-dri \
+    xvfb \
+    libglu1-mesa-glx \
+    pkg-config \
+    libglu1-mesa-dri \
+    && rm -rf /var/lib/apt/lists/*
 # Copy the rest of the application code to the container
 COPY . .
 
