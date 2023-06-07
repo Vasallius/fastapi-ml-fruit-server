@@ -1,9 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
-from pydantic import BaseModel
+import numpy as np
+import matplotlib.pyplot as plt
+import tensorflow as tf
+from PIL import Image
+import io
+import cv2
+
 
 app = FastAPI()
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -14,25 +22,28 @@ app.add_middleware(
 )
 
 
-class Msg(BaseModel):
-    msg: str
+def preproc(img):
+    img = img / 255.0
+    img = tf.image.resize(img, [128, 128])
+    return img
 
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World. Welcome to FastAPI!"}
+    return {"message": "Hello World"}
 
 
-@app.get("/path")
-async def demo_get():
-    return {"message": "This is /path endpoint, use a post request to transform the text to uppercase"}
+@app.post("/upload")
+async def upload_image(image: UploadFile = File(...)):
+    model = tf.keras.models.load_model("mymodelv1.2.h5")
+    contents = await image.read()
 
+    img = Image.open(io.BytesIO(contents))
+    image_array = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+    image_array = preproc(image_array)
+    image_array = tf.expand_dims(image_array, axis=0)
+    predictions = model.predict(image_array)
 
-@app.post("/path")
-async def demo_post(inp: Msg):
-    return {"message": inp.msg.upper()}
+    predictions = predictions.flatten().tolist()
 
-
-@app.get("/path/{path_id}")
-async def demo_get_path_id(path_id: int):
-    return {"message": f"This is /path/{path_id} endpoint, use post request to retrieve result"}
+    return JSONResponse(content={"filename": image.filename, "predictions": predictions})
