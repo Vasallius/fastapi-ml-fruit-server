@@ -4,4 +4,3 @@ numpy
 matplotlib
 tensorflow
 opencv-python
-pyglet
