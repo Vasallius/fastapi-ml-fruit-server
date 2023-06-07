@@ -1,2 +1,7 @@
 fastapi
 uvicorn
+numpy
+matplotlib
+tensorflow
+cv2
+opencv-python
