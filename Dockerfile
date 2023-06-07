@@ -1,25 +1,18 @@
-# Use the official Python base image with the desired version
-FROM python:3.8-slim
+# Use the official NVIDIA CUDA base image with Python 3.8
+FROM nvidia/cuda:11.0-base-ubuntu20.04
 
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy the requirements file to the container
-COPY requirements.txt .
+# Install Python 3.8
+RUN apt-get update && \
+    apt-get install -y python3.8 python3.8-venv python3.8-dev && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install the Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-
-# Install the necessary dependencies for libGL.so.1 and OpenCV
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
-    libgl1-mesa-dri \
-    xvfb \
-    libglu1-mesa-glx \
-    pkg-config \
-    libglu1-mesa-dri \
-    && rm -rf /var/lib/apt/lists/*
 
 # Copy the rest of the application code to the container
 COPY . .
