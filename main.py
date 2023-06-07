@@ -34,22 +34,12 @@ async def root():
 
 @app.post("/upload")
 async def upload_image(image: UploadFile = File(...)):
-    model = tf.keras.models.load_model("mymodelv1.2.h5")
+    model = tf.keras.models.load_model("mymodelv1.3.h5")
     contents = await image.read()
 
     img = Image.open(io.BytesIO(contents))
-    # image_array = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
     image_array = np.array(img)
-
     image_array = np.flip(image_array, axis=2)
-    # image_array = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-    # img_bgr = np.array(img)
-
-    # # Convert BGR to RGB format
-    # img_rgb = np.transpose(img_bgr, (2, 0, 1))
-
-    # Display the converted image
-    # image_array = np.array(img_rgb)
     image_array = preproc(image_array)
     image_array = tf.expand_dims(image_array, axis=0)
     predictions = model.predict(image_array)
