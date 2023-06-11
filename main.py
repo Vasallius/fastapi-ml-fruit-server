@@ -61,8 +61,7 @@ def plot_boxes(results, frame):
         predictions = predictions.flatten().tolist()
         
         pred_label = 'rotten' if predictions[0] > 0.5 else 'fresh'
-        bgr = (0, 0, 255) if predictions[0] > 0.5 else (0, 255, 0)
-        print(pred_label, row)
+        bgr = (255, 0, 0) if predictions[0] > 0.5 else (0, 255, 0)
         
         # classes = model.names # Get the name of label index
         label_font = cv2.FONT_HERSHEY_SIMPLEX #Font for the label.
