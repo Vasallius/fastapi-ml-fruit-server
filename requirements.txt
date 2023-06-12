@@ -6,7 +6,6 @@ tensorflow
 opencv-python-headless
 python-multipart
 torch
-torchvision
-torchaudio
 pandas
 psutil
+pyyaml
