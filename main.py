@@ -97,6 +97,22 @@ async def upload_image(image: UploadFile = File(...)):
 class FrameData(BaseModel):
     frame: str
 
+@app.post("/frame")
+async def upload_pic(i: FrameData):
+    x = i.frame.replace('data:image/jpeg;base64,', '')
+    x = io.BytesIO(b64decode(x))
+    
+    image_array= Image.open(x)
+    image_array = np.array(image_array)
+    image_array = np.flip(image_array, axis=2)
+    image_array = preproc(image_array)
+    image_array = tf.expand_dims(image_array, axis=0)
+    predictions = fresh_model.predict(image_array)
+
+    predictions = predictions.flatten().tolist()
+
+    return JSONResponse(content={"predictions": predictions})
+
 @app.post("/stream")
 async def upload_frame(i: FrameData):
 
