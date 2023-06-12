@@ -10,3 +10,4 @@ torchvision
 pandas
 psutil
 pyyaml
+tqdm
