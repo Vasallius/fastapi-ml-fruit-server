@@ -1,9 +1,7 @@
 fastapi
 uvicorn
 numpy
-matplotlib
 tensorflow
-opencv-python-headless
 python-multipart
 torch
 torchvision

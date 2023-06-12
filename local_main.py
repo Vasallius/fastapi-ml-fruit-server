@@ -2,8 +2,10 @@ from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
+import cv2
 import numpy as np
 import torch
+import matplotlib.pyplot as plt
 import tensorflow as tf
 from PIL import Image
 import io
@@ -42,7 +44,6 @@ def plot_boxes(results, frame):
     labels, cord = results
     n = len(labels)
     x_shape, y_shape = frame.shape[1], frame.shape[0]
-    res = []
     for i in range(n):
         row = cord[i]
         # If score is less than 0.2 we avoid making a prediction.
@@ -58,10 +59,20 @@ def plot_boxes(results, frame):
         img = tf.expand_dims(img, axis=0)
         predictions = fresh_model.predict(img)
         predictions = predictions.flatten().tolist()
-
-        res.append({ 'coor': [(x1, y1), (x2, y2)], 'pred': predictions[0] })
         
-    return res
+        pred_label = 'rotten' if predictions[0] > 0.5 else 'fresh'
+        bgr = (255, 0, 0) if predictions[0] > 0.5 else (0, 255, 0)
+        
+        # classes = model.names # Get the name of label index
+        label_font = cv2.FONT_HERSHEY_SIMPLEX #Font for the label.
+        cv2.rectangle(frame, \
+                      (x1, y1), (x2, y2), \
+                       bgr, 2) #Plot the boxes
+        cv2.putText(frame,\
+                    pred_label, \
+                    (x1, y1), \
+                    label_font, 0.9, bgr, 2) #Put a label over box.
+        return frame
 
 @app.get("/")
 async def root():
@@ -109,16 +120,8 @@ async def upload_frame(i: FrameData):
     x = io.BytesIO(b64decode(x))
     img = Image.open(x)
     img = np.array(img)
-    img = preproc(img)
-    img = tf.expand_dims(img, axis=0)
-    predictions = fresh_model.predict(img)
-
-    predictions = predictions.flatten().tolist()
-
-    return JSONResponse(content={'predictions': predictions})
-    # results = score_frame(img)
-    # res = plot_boxes(results, img)
-    return JSONResponse(content={'frame': i.frame, 'data': res})
+    results = score_frame(img)
+    res = plot_boxes(results, img)
 
     try:
         image = Image.fromarray(res)
