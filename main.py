@@ -17,7 +17,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173",
                    "https://ml-fruit-freshness-classifier.vercel.app", 
-                   "https://ml-fruit-freshness-classifier-git-crazy-smtnhacker.vercel.app/"],
+                   "https://ml-fruit-freshness-classifier-git-crazy-smtnhacker.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

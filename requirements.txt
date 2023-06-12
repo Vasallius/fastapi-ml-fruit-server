@@ -3,10 +3,4 @@ uvicorn
 numpy
 tensorflow
 python-multipart
-torch
-torchvision
 pandas
-psutil
-pyyaml
-tqdm
-ultralytics
