@@ -132,3 +132,18 @@ async def upload_frame(i: FrameData):
         return JSONResponse(content={'frame': 'data:image/jpeg;base64,' + b64encode(image_bytes).decode('ascii')})
     except:
         return JSONResponse(content={'frame': i.frame})
+
+@app.post("/simple_stream")
+async def upload_frame(i: FrameData):
+
+    x = i.frame.replace('data:image/jpeg;base64,', '')
+    x = io.BytesIO(b64decode(x))
+    img = Image.open(x)
+    img = np.array(img)
+    img = preproc(img)
+    img = tf.expand_dims(img, axis=0)
+    predictions = fresh_model.predict(img)
+
+    predictions = predictions.flatten().tolist()
+
+    return JSONResponse(content={'predictions': predictions})

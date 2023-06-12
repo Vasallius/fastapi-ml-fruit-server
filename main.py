@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 import numpy as np
-import torch
 import tensorflow as tf
 from PIL import Image
 import io
@@ -12,12 +11,13 @@ from pydantic import BaseModel
 
 
 app = FastAPI()
-obj_detection_model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 fresh_model = tf.keras.models.load_model("mymodelv1.3.h5")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173","https://ml-fruit-freshness-classifier.vercel.app"],
+    allow_origins=["http://localhost:5173",
+                   "https://ml-fruit-freshness-classifier.vercel.app", 
+                   "https://ml-fruit-freshness-classifier-git-crazy-smtnhacker.vercel.app/"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,40 +28,6 @@ def preproc(img):
     img = img / 255.0
     img = tf.image.resize(img, [128, 128])
     return img
-
-def score_frame(frame):
-    device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    obj_detection_model.to(device)
-    frame = [frame]
-    results = obj_detection_model(frame)
-    labels = results.xyxyn[0][:, -1].numpy()
-    cord = results.xyxyn[0][:, :-1].numpy()
-    return labels, cord
-
-def plot_boxes(results, frame):
-    labels, cord = results
-    n = len(labels)
-    x_shape, y_shape = frame.shape[1], frame.shape[0]
-    res = []
-    for i in range(n):
-        row = cord[i]
-        # If score is less than 0.2 we avoid making a prediction.
-        if row[4] < 0.2: 
-            continue
-        x1 = int(row[0]*x_shape)
-        y1 = int(row[1]*y_shape)
-        x2 = int(row[2]*x_shape)
-        y2 = int(row[3]*y_shape)
-        
-        img = frame[y1:y2, x1:x2]
-        img = preproc(img)
-        img = tf.expand_dims(img, axis=0)
-        predictions = fresh_model.predict(img)
-        predictions = predictions.flatten().tolist()
-
-        res.append({ 'coor': [(x1, y1), (x2, y2)], 'pred': predictions[0] })
-        
-    return res
 
 @app.get("/")
 async def root():
@@ -116,16 +82,18 @@ async def upload_frame(i: FrameData):
     predictions = predictions.flatten().tolist()
 
     return JSONResponse(content={'predictions': predictions})
-    # results = score_frame(img)
-    # res = plot_boxes(results, img)
-    return JSONResponse(content={'frame': i.frame, 'data': res})
 
-    try:
-        image = Image.fromarray(res)
-        image_stream = io.BytesIO()
-        image.save(image_stream, format='JPEG')
-        image_stream.seek(0)
-        image_bytes = image_stream.getvalue()
-        return JSONResponse(content={'frame': 'data:image/jpeg;base64,' + b64encode(image_bytes).decode('ascii')})
-    except:
-        return JSONResponse(content={'frame': i.frame})
+@app.post("/simple_stream")
+async def upload_frame(i: FrameData):
+
+    x = i.frame.replace('data:image/jpeg;base64,', '')
+    x = io.BytesIO(b64decode(x))
+    img = Image.open(x)
+    img = np.array(img)
+    img = preproc(img)
+    img = tf.expand_dims(img, axis=0)
+    predictions = fresh_model.predict(img)
+
+    predictions = predictions.flatten().tolist()
+
+    return JSONResponse(content={'predictions': predictions})
