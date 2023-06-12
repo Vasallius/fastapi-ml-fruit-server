@@ -4,3 +4,5 @@ numpy
 tensorflow
 python-multipart
 pandas
+opencv-python
+matplotlib
