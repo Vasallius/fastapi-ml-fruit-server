@@ -11,3 +11,4 @@ pandas
 psutil
 pyyaml
 tqdm
+ultralytics
