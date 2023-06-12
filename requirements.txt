@@ -6,6 +6,7 @@ tensorflow
 opencv-python-headless
 python-multipart
 torch
+torchvision
 pandas
 psutil
 pyyaml
